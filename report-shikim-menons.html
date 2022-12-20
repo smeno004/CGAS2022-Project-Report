@@ -1,0 +1,1328 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Computer Graphics - Final Project Report</title>
+
+    <link href="resources/bootstrap.min.css" rel="stylesheet">
+    <link href="resources/offcanvas.css" rel="stylesheet">
+    <link href="resources/custom2014.css" rel="stylesheet">
+    <link href="resources/twentytwenty.css" rel="stylesheet" type="text/css" />
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        table {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        table, th, td {
+           border: 2px solid black;
+        }
+        th, td {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="container headerBar">
+		<h1>Computer Graphics Final Project Report</h1>
+        <h2>Shinjeong Kim (22-954-101), Siddharth Menon (22-940-357)</h2>
+</div>
+
+<div class="container contentWrapper">
+<div class="pageContent">
+
+	<!-- ================================================================= -->
+	<h2>1. Motivational image: Laputa</h2>
+    <div class="twentytwenty-container">
+        <img src="images/Laputa.webp" alt=""/>
+    </div> <br>
+    
+    <p>
+        Our image of motivation is from a Ghibli anime, Castle in the Sky. Typically, one would not expect to see
+        a castle built atop a cloud in the sky. As a result, we could view the above scene as unexpected and "out of place".
+    </p>
+
+    <h2>2. Features</h2>
+
+    <h3>Feature list</h3>
+    <p>
+        <table>
+            <tr>
+                <th>Responsible Person</th>
+                <th>Feature Name</th>
+                <th>Points</th>
+            </tr>
+            <tr>
+                <th>Shinjeong Kim</th>
+                <th>Advanced Camera Models</th>
+                <th>15</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Disney BSDF</th>
+                <th>15</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Spectral Rendering</th>
+                <th>15</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Textured Area Emitters</th>
+                <th>5</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Probabilistic Progressive Photon Mapping</th>
+                <th>5</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Final Gathering for Photon Mapping</th>
+                <th>5</th>
+            </tr>
+            <tr>
+                <th>Siddharth Menon</th>
+                <th>Heterogenous Participating Media</th>
+                <th>30</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Environment Map Emitter</th>
+                <th>15</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Images As Textures</th>
+                <th>5</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Bump/Normal Mapping</th>
+                <th>5</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Procedural Volumes</th>
+                <th>5</th>
+            </tr>
+        </table>
+    </p>
+
+    <h2>3. Implementation Details</h2>
+
+    <h3>Images as Textures</h3>
+    <p>
+        <b>Main Modified Files:</b> 
+        <li><code>imagetexture.cpp</code></li>
+        <br>
+
+        For the purpose of reading in the images for the texture, the stb_image library was used. To extract the rgb value
+        for shading the desired location, the eval function was defined. We also have access to scale and offset values, which 
+        we apply to the UV coordinate that is passed into the eval function. <a href="https://viclw17.github.io/2019/04/12/raytracing-uv-mapping-and-texturing">This article</a> 
+        was referenced to ensure the correct image texture mapping was calculated. Our implementation calculates the mapping of the UV coordinates
+        in Repeat mode (i.e. once we reach the edges of the image, we wrap around). Once the correct mapping is ensured, we extract the rgb values from
+        the image, apply an inverse gamma correct (as described <a href="https://www.pbr-book.org/3ed-2018/Texture/Image_Texture#InverseGammaCorrect">here</a>), and 
+        finally return the result to be used by the bsdf the texture is attached to.
+    </p>
+
+    <h4>Validation</h4>
+    <p>Below we see a rock wall texture applied to a plane object (compared to a scene rendered in Mitsuba 3)</p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/cbox_texture_onlytex_test.png" alt="Mine" class="img-responsive">
+        <img src="validation_images_siddharth/MitsubaRefRenders/imtex_test.png" alt="Mitsuba Reference" class="img-responsive">
+    </div> <br>
+
+    <p>Below is a render of the texture being applied to the camelhead mesh.</p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/mesh_camelhead_texture.png" alt="Camelhead texture" class="img-responsive">
+    </div> <br>
+
+    <h3>Normal Mapping</h3>
+    <p>
+        <b>Main Modified Files:</b> 
+        <li><code>bumpmaptexture.cpp</code></li>
+        <li><code>shape.h</code></li>
+        <li><code>sphere.cpp</code> and <code>mesh.cpp</code></li>
+        <li><code>diffuse.cpp</code></li>
+        <br>
+
+        For this feature, normal maps were implemented. Since we are working with png images for the normal maps, the lodepng library is used to read 
+        in the normal map textures. The addChild function in <code>diffuse.cpp</code> is modified to account for an additional attached normal map texture.
+        In <code>bumpmaptexture.cpp</code>, the code is very similar to the images as textures feature. However, in the eval function, once we extract 
+        the rgb values from the UV coordinate, we instead return the normals vector defined as follows: <br> <br>
+
+        <center>
+            \(\begin{eqnarray} 
+            x = 2 * r + 1 \\
+            y = 2 * g + 1 \\
+            z = 2 * b + 1 \\
+            \end{eqnarray}\)
+        </center> <br> <br>
+
+        In <code>shape.h</code>, a new function <code>UpdateNormals()</code> was defined. Here, if the attached bsdf has a normal map, the shading frame 
+        associated with the passed in Intersection struct object is updated with the new normals. The new normal is evaluated using the normal texture's eval. The old frame's
+        normal, tangent, and bitangent are used to compute a frame to convert from tangent space to world space. The new normal is then transformed to world coordinates and the 
+        shading frame is updated. (Referencing: <a href="https://en.wikipedia.org/wiki/Normal_mapping">this</a> and 
+        <a href="https://learnopengl.com/Advanced-Lighting/Normal-Mapping">this</a>) In the specific shapes 
+        (<code>mesh.cpp</code> and <code>sphere.cpp</code>), this new function is called to update normals at the end of their SetHitInformation function.
+    </p>
+
+    <h4>Validation</h4>
+    <p>Below, we can see a 4-way comparison showing:
+        <li>A plane object with no texture</li> 
+        <li>A plane object with just the texture </li>
+        <li>A plane object with just the normal map</li>
+        <li>A plane object with both image texture and normal map applied</li>
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/cbox_texture_onlytex_test.png" alt="Only Texture" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/cbox_texture_im_w_norm_test.png" alt="With Texture and Normals" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/cbox_texture_notex_test.png" alt="No Texture / No Normals" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/cbox_texture_onlynormals_test.png" alt="Only Normals" class="img-responsive">
+    </div> <br>
+
+    <p>Here, we see a sphere with and without a normal map attached.</p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/sphere_image_onlytexture.png" alt="Sphere without Normals" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/sphere_image_texture_normals.png" alt="With Normals" class="img-responsive">
+    </div> <br>
+
+    <h3>Environment Map Emitter</h3>
+    <p>
+        <b>Main Modified Files:</b> 
+        <li><code>environmapemitter.cpp</code></li>
+        <br>
+
+        The environment map emitter was implemented by referencing this <a href="https://web.cs.wpi.edu/~emmanuel/courses/cs563/S07/projects/envsample.pdf">research paper</a>. 
+        Environment Maps are assumed to be input in the OpenEXR format. With this assumption, the image can be read in using the Bitmap class. 
+        Before rendering begins, if there is an environment map defined, the 2D pdf/cdf/marginal pdf/marginal cdf are also precomputed (as described in the research paper)
+        and stored so that we can access them later, during rendering, when sampling the environment map. <br> <br>
+
+        In the <code>sample()</code> function, we use the precomputed values to sample a point on the environment map, which we use to determine the sampled incidence vector. 
+        The <code>eval()</code> function takes in an incidence vector and converts it to spherical coordinates. These spherical coordinates are then used to extract values from 
+        the environment map bitmap. Bilinear Interpolation is also applied, before returning the result (multiplied by a supplied power/intensity) as the final evaluated color.
+        The <code>pdf()</code> function again computes the spherical coordinates of the input vector, and uses these computed coordinates to index into the precomputed 
+        pdf and marginal pdf values, which are multiplied and returned. <br> <br>
+
+        The environment map emitter is assumed, when present in the scene, to be attached to a sphere large enough to contain everything within the scene. 
+        The implementation was tested with path tracing using BSDF sampling, as well as multiple importance sampling.
+    </p>
+
+    <h4>Validation</h4>
+    <p>Below, we see environment map renders (using path tracing with multiple importance sampling), compared with renders in Mitsuba 3.
+        This validation shows rendering/sampling of environment maps in scenes containing a mirror object, a dielectric object, and diffuse objects.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/env_map_test.png" alt="Mine" class="img-responsive">
+        <img src="validation_images_siddharth/MitsubaRefRenders/envmap_mitsuba_test.png" alt="Mitsuba Reference" class="img-responsive">
+    </div> <br>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/env_map_test_2.png" alt="Mine" class="img-responsive">
+        <img src="validation_images_siddharth/MitsubaRefRenders/envmap_mitsuba_test_grace.png" alt="Mitsuba Reference" class="img-responsive">
+    </div> <br>
+
+    <h3>Participating Media</h3>
+    <p>
+        <b>Main Modified Files:</b> 
+        <li><code>volpathmats.cpp</code></li>
+        <li><code>volpathmis.cpp</code></li>
+        <li><code>medium.h</code> and <code>medium.cpp</code></li>
+        <li><code>scene.h</code></li>
+        <li><code>phase.h</code> and <code>phase.cpp</code></li>
+        <li><code>homogeneous_medium.cpp</code></li>
+        <li><code>heterogeneous_medium.cpp</code></li>
+        <br>
+
+        This feature took the most time to implement, since it has a lot of moving parts. For the sake of simplicity, only one scene wide medium is considered. If more medium
+        sources need to be added, they are assumed to be attached to a shape/mesh in the scene (with no attached bsdf). For this feature, I implemented 
+        homogeneous and heterogeneous media, the isotropic and Henyey-Greenstein phase functions, and volumetric path tracing (both with material sampling and 
+        with multiple importance sampling). Below, I describe the implementation details of each of these. <br> <br>
+
+        Before stepping into the implementation details, some of the common values used by both media in general are defined as follows:
+
+        <center>
+            \(\begin{eqnarray} 
+            \sigma_{s} = Scattering Coefficient \\
+            \sigma_{a} = Absorption Coefficient \\
+            \sigma_{t} = Extinction Coefficient = \sigma_{s} + \sigma_{a} \\
+            Albedo = \sigma_{s} / \sigma_{t} \\
+            \end{eqnarray}\)
+        </center> <br> <br>
+    </p>
+
+    <h4>Phase Functions</h4>
+    <p>
+        As mentioned above, Isotropic and Henyey-Greenstein phase functions are defined. The Phase Function class as well as a PhaseQueryRecord struct 
+        is defined in <code>phase.h</code>. The phase function call has a <code>sample_p()</code> function to sample a scattering direction along a given ray. 
+        Additionally, <code>eval()</code> and <code>pdf()</code> functions are also defined. Isotropic is a pretty simple class, 
+        which samples a direction using Uniform Sphere sampling. 
+        
+        <center>
+            \(\begin{eqnarray} 
+            P_{iso} = (\frac{1}{4\pi}) \\
+            \end{eqnarray}\)
+        </center> <br> <br>
+
+        The Henyey-Greenstein phase function was implemented using 
+        the <a href="https://www.pbr-book.org/3ed-2018/Volume_Scattering/Phase_Functions">PBR textbook as reference</a> 
+        with the below formulation: <br>
+
+        <center>
+            \(\begin{eqnarray} 
+            P_{HG} = (\frac{1}{4\pi} \frac{1 - g^2}{(1 + g^2 + 2g(\cos\theta))^\frac{3}{2}}) \\
+            \end{eqnarray}\)
+        </center> <br> <br>
+    </p>
+
+    <h5><b>Phase Function Validation</b></h5>
+    <p>Initial validation of the Henyey-Greenstein phase function was conducted by modifying the warptest to visualize the phase function outputs. Below are the warptest
+        and the corresponding chi2 results of the Henyey-Greenstein phase function. Further validation on actual scenes was conducted after 
+        the implementation of volumetric path tracing, and the corresponding images will be shown in the sections further below.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/HG_phasefunction_warptest.png" alt="Henyey-Greenstein Warptest">
+    </div> <br>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/HG_phasefunction_chi2.png" alt="Henyey-Greenstein Chi-2 Test">
+    </div> <br>
+
+    <h4>Homogeneous Participating Media</h4>
+    <p>
+        The Medium class defined in <code>medium.h</code> declares <code>sampleDistance()</code> and <code>evalTr()</code> functions, which are of main interest. Additionally,
+        we also have a MediumQueryRecord struct defined to simplify storage of values for the integrator. These functions are defined for the specific medium types 
+        (homogeneous / heterogeneous). <br> <br>
+
+        Once again, for homogeneous medium implementation, the <a href="https://www.pbr-book.org/3ed-2018/Light_Transport_II_Volume_Rendering/Sampling_Volume_Scattering">PBR textbook</a> 
+        was used as reference for <code>sampleDistance</code>. A sampled distance is calculated as \(-log(1 - random) / \sigma_t\). Sampling was successful if 
+        the sampled distance is less than the free path (MediumQueryRecord.t) of the medium, which is expected to be defined before calling the sample function in the integrator. 
+        If successful, the medium query record is filled out. Finally, transmittance is calculated and returned. <code>evalTr()</code> returns \(exp(-\sigma_t * distance)\). <br> <br>
+    </p>
+
+    <h4>Heterogeneous Participating Media</h4>
+    <p>
+        Our heterogeneous participating medium is implemented to work with either a defined bounding box or attached to a shape/mesh. We can define the max density of the medium.
+        We can also pass a density function (1-3), which is used in a <code>getDensity()</code> function. The first density function implements a constant density 
+        (which should be similar to the homogeneous implementation). The second density function implements a density that varies exponentially within its bounds.
+        Finally, the third density function implements procedural density defined by 3D Perlin Noise (which will be further described in the Procedural Volume section). <br> <br>
+
+        For both sampling and evalTr, Delta / Woodcock tracking is implemented, as described in <a href="https://www.pbr-book.org/3ed-2018/Light_Transport_II_Volume_Rendering/Sampling_Volume_Scattering#HeterogeneousMedium">PBRT</a>
+        and the lecture slides. In <code>sampleDistance()</code>, as we step over the ray using delta tracking, we check whether
+        the currently sampled distance is within the bounds of the medium. These steps are defined as: <br> <br>
+
+        <center>
+            \(\begin{eqnarray} 
+            t_{i} = t_{i-1} - \ln (\frac{1 - \xi}{\sigma_{t,max}}) \\
+            \end{eqnarray}\)
+        </center> <br> <br>
+        
+        If not within the bounds of the medium, we return without any scattering. Otherwise, we get the density at the current location and using this as 
+        a probability, we determine whether a scattering has occurred. If scattering is successful, we update the query record and return the successful intensity. If scattering 
+        is not successful, we keep going along the ray. Similarly, the <code>evalTr()</code> function computes the transmittance along the ray, once again using delta tracking. <br> <br>
+    </p>
+
+    <h4>Volumetric Path Tracing</h4>
+    <p>
+        <code>volpathmats.cpp</code> and <code>volpathmis.cpp</code> extends the equivalent path tracer from Assignment 4 to additionally handle medium interaction. If the active 
+        ray is within a medium, we sample the medium for scattering. If scattering was successful, we handle medium interaction. In this part of the path tracer, we sample 
+        a random emitter and calculate the transmitted intensity to this scattering location. The associated phase function is sampled to get a scattered direction to send the 
+        ray for the next iteration. In the MIS version of the path tracer, we also check here for any emitter interaction and update the weights appropriately. <br> <br>
+
+        In the surface interaction section of the path tracer, we have a section of code that checks for a medium boundary hit (by looking for a null bsdf). If the ray is entering 
+        the medium, the active medium is set and the ray for the next iteration is set to a ray starting at the point of intersection going in the same direction. Additionally, 
+        transmittance is also accumulated in the emitter and bsdf sampling sections. <br> <br>
+
+        Outside of the main intersection check at the start of the loop, all other ray intersection checks are modified to use a new <code>rayIntersectTr()</code> function 
+        defined in <code>scene.h</code>. This function continually checks for intersections along the ray until a non-medium surface is hit. While a non-medium surface has not been
+        hit, transmittance is calculated with whatever medium the current ray segment is actively in. <br>
+    </p>
+
+    <h4>Validation</h4>
+    <h5><b>Homogeneous Media</b></h5>
+    <p>Below, we see the validation for a scene-wide homogeneous medium, compared with a scene without any medium, as well as a scene rendered in Mitsuba 3 with a medium.</p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_no_medium.png" alt="No Medium" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_mis_s025a0005.png" alt="Nori MIS (Scatter 0.25, Absorb 0.005)" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_mats_s025a0005.png" alt="Nori Mats (Scatter 0.25, Absorb 0.005)" class="img-responsive">
+        <img src="validation_images_siddharth/MitsubaRefRenders/homogeneous_scenewide_mitsuba_test.png" alt="Mitsuba Reference" class="img-responsive">
+    </div> <br>
+
+    <p>Here, we test a scene with homogeneous scene-wide medium with the scattering (0.45) and absorption (0.15) coefficients modified.</p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_mats_s045a015.png" alt="Nori Mats (Scatter 0.45, Absorb 0.15)" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_mis_s045a015.png" alt="Nori MIS (Scatter 0.45, Absorb 0.15)" class="img-responsive">
+    </div> <br>
+
+    <p>Now, we look at a scene with a homogeneous medium attached to a sphere (with zero scattering, and 1 absorption). This is compared to a corresponding scene in Mitsuba 3.</p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/homogeneous_sphere_s0a1_mis.png" alt="Nori Homogeneous Sphere Medium (Scatter 0.0, Absorb 1.0)" class="img-responsive">
+        <img src="validation_images_siddharth/MitsubaRefRenders/homogeneous_sphere_mitsuba_test.png" alt="Mitsuba Reference" class="img-responsive">
+    </div> <br>
+
+    <h5><b>Phase Function Scene Validation</b></h5>
+    <p>Below, we see the effect of changing phase function parameters (Isotropic and Henyey-Greenstein with different values of g) on both a scene wide medium, 
+        as well as to a shape bound medium. \(g < 0\) shows a backward scattering case and \(g > 0\) shows a forward scattering case.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_mis_s025a0005.png" alt="Isotropic" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_hg0_mis.png" alt="Henyey Greenstein (g = 0.0)" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_hg05_mis.png" alt="Henyey Greenstein (g = 0.5)" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/vol_test_scene_wide_hgneg05_mis.png" alt="Henyey Greenstein (g = -0.5)" class="img-responsive">
+    </div> <br>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/homogeneous_sphere_s15a025_iso_mis.png" alt="Isotropic" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/homogeneous_sphere_s15a025_hg0_mis.png" alt="Henyey Greenstein (g = 0.0)" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/homogeneous_sphere_s15a025_hg075_mis.png" alt="Henyey Greenstein (g = 0.75)" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/homogeneous_sphere_s15a025_hgneg05_mis.png" alt="Henyey Greenstein (g = -0.5)" class="img-responsive">
+    </div> <br>
+
+    <h5><b>Heterogeneous Media</b></h5>
+    <p>Below, we see the validation for heterogeneous medium, confined to a bounding box, attached to a sphere, and finally attached to a cloud .obj file.
+        Each of these are run with default constant density, exponentially changing density, as well as procedural density (Perlin Noise).
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_bbox_defdens_mis.png" alt="Default Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_bbox_2dens_mis.png" alt="Exponential Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_bbox_procdens_mis.png" alt="Procedural Density" class="img-responsive">
+    </div> <br>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/homogeneous_sphere_s3a2_mis.png" alt="Homogeneous" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_sphere_s3a2_defdens_mis.png" alt="Default Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_sphere_s3a2_2dens_mis.png" alt="Exponential Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_sphere_s3a2_procdens_mis.png" alt="Procedural Density" class="img-responsive">
+    </div> <br>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_cloudobj_defdens_mis.png" alt="Default Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_cloudobj_2dens_mis.png" alt="Exponential Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_cloudobj_procdens_mis.png" alt="Procedural Density" class="img-responsive">
+    </div> <br>
+
+    <h4>Further Improvements/Additions:</h4>
+    <p>
+        This was the extent of the capabilities I implemented within the context of participating media during the project time frame. Given more time, 
+        further improvements/additions to this feature would include: <br>
+        <li>More phase functions (Mie and Rayleigh phase functions)</li>
+        <li>Improve/Optimize the handling of active media in the volumetric path tracers</li>
+        <li>Add support to heterogeneous medium to read and use voxel grids for density calculation (using .vdb/.vol files)</li>
+    </p> <br>
+
+    <h3>Procedural Textures / Volumes</h3>
+    <p>
+        <b>Main Modified Files:</b> 
+        <li><code>texture.cpp</code></li>
+        <li><code>heterogeneous_medium.cpp</code></li>
+        <br>
+
+        Procedural textures and volumes were designed using Perlin Noise implemented in <code>texture.cpp</code>. <br> <br>
+        
+        <b>Procedural Texture:</b> 2D Perlin Noise was implemented referencing <a href="https://en.wikipedia.org/wiki/Perlin_noise">this</a> and <a href="https://adrianb.io/2014/08/09/perlinnoise.html">this</a>.
+        Given 2D x and y coordinates, first we determine the grid cell coordinates and then get random directions at each of these coordinates. 
+        Finally, we compute the gradients and interpolate the values to get the final Perlin noise output. <br> <br> 
+
+        <b>Procedural Volumes:</b> The above technique is extended to 3D Perlin Noise, referencing the <a href="https://www.pbr-book.org/3ed-2018/Texture/Noise">PBR textbook</a>. Similar to the 
+        2D case, we compute the noise grid cell coordinates and gradients in 3D and carry out trilinear interpolation to get the 3D Perlin noise output. This 
+        output is passed through Fractional Brownian Motion (FBM) to get the final output that is passed to the volume's density function. <br> <br>
+    </p>
+
+    <h4>Validation</h4>
+    <p>Below, we see a Perlin Noise texture (with different persistence parameters) applied to a plane object in the cornell box scene. </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/perlincbox_texture_o015_test.png" alt="Persistence = 0.15" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/perlincbox_texture_o035_test.png" alt="Persistence = 0.35" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/perlincbox_texture_o075_test.png" alt="Persistence = 0.75" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/perlincbox_texture_o1_test.png" alt="Persistence = 1.0" class="img-responsive">
+    </div> <br>
+
+    <p>Below, we see Perlin Noise being applied to heterogeneous media. </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_sphere_s3a2_defdens_mis.png" alt="Default Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_sphere_s3a2_procdens_mis.png" alt="Procedural Density" class="img-responsive">
+    </div> <br>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_cloudobj_defdens_mis.png" alt="Default Density" class="img-responsive">
+        <img src="validation_images_siddharth/NoriRenders/heterogeneous_cloudobj_procdens_mis.png" alt="Procedural Density" class="img-responsive">
+    </div> <br>
+
+    <h3>Advanced Camera Model</h3>
+    <p>
+        <b>Main Modified Files:</b>
+        <li><code>thinlens.cpp</code></li>
+        <br>
+
+        Our advanced camera model has depth of field, chromatic aberration, and lens distortion features implemented in <code>thinlens.cpp</code>. <br> <br>
+
+        <b>Depth of Field:</b> Our implementation follows the idea from <a href="https://medium.com/@elope139/depth-of-field-in-path-tracing-e61180417027">
+        this</a>. The origin of ray on the image plane is modified according to the uniform disk distribution multiplied with
+        aperture size given as a parameter. The target point of the ray is set according to the focal length also given as a
+        parameter.<br> <br>
+
+        <b>Lens Distortion:</b> Our implementation follows the equation of <a href="https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html">
+        OpenCV camera calibration</a> which has radial distortion and tangential distortion. Note that, to make the behavior of
+        distortion coefficients exactly the same with real camera, we should calculate the inverse function of the distortion
+        equation; however, the given high order multivariable equation is difficult to solve in a closed form, while we can still
+        have the right behavior by considering the effects of the coefficients as direct oposition of OpenCV. Thus, the below
+        equations represents the modified target point of the ray on the image plane.<br> <br>
+
+        <center>
+        \(\begin{eqnarray} 
+            x_{distorted} =& x(1+k_1r^2+k_2r^4+k_3r^6) + 2p_1xy+p_2(r^2+2x^2) \\
+            y_{distorted} =& y(1+k_1r^2+k_2r^4+k_3r^6) + p_1(r^2+2y^2)+2p_2xy \\
+            &\text{where } r = \sqrt{x^2+y^2}
+            \end{eqnarray}\)
+        </center> <br> <br>
+
+        <b>Chromatic Aberration:</b> This implementation is devised by our own, with the idea of modifying the target point of the ray
+        in a similar way to the above lens distortion implementation. First, whether which of the red, green, or blue ray will be shot
+        is determined with \(1/3\) probability each. For each case, the target point of the ray on the image plane is biased proportional
+        to the given degree of chromatic aberration and distance of the original target point from the principal point (origin of the
+        image plane). Note that the green ray is considered to be in focus, thus the target point for green ray is not moved, while
+        the red ray is biased outward and blue ray is biased inward, as the red rays tend to go straighter and thus it maintains outward
+        direction after passing through the lens and while the blue rays tend to bend more and thus it heads more inward direction.
+        Thus, the below equations represents the modified target point of the ray on the image plane. Also note that we shoot ray
+        with value 3 for the selected channel instead of 1 for all channels, since the probability of one channel being selected is
+        \(1/3\) as mentioned before.<br> <br>
+
+        <center>
+        \(\begin{eqnarray} 
+            x_{chromatic} =& x_{distorted} + bxr \\
+            y_{chromatic} =& y_{distorted} + byr \\
+            \text{where } &r = \sqrt{x^2+y^2},\ b=\{-1, 0, 1\}\times bias
+            \end{eqnarray}\)
+        </center> <br> <br>
+    </p>
+
+    <h4>Validation</h4>
+    <p>
+        Below two scenes show that when all features are turned off, our thinlens camera is identical to the perspective camera.
+    </p>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/advcam/nori_perspective_spheres.png" alt="Perspective" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_depthoffield_f4.123_a0.0.png" alt="Thinlens with all features disabled" class="img-responsive">
+    </div>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/advcam/nori_perspective_twosphere.png" alt="Perspective" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_0_p0_0.png" alt="Thinlens with all features disabled" class="img-responsive">
+    </div>
+    <br>
+
+    <p>
+        Below, we see how depth of field makes the objects out of focus blurry. The first set of images are with 4.123 focal length
+        and the second ones are with 5.5.
+    </p>
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f4.123_a0.0.png" alt="Aperture = 0.0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f4.123_a0.03.png" alt="Apecture = 0.03" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f4.123_a0.1.png" alt="Apecture = 0.1" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f4.123_a0.3.png" alt="Apecture = 0.3" class="img-responsive">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f5.5_a0.0.png" alt="Aperture = 0.0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f5.5_a0.03.png" alt="Apecture = 0.03" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f5.5_a0.1.png" alt="Apecture = 0.1" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_depthoffield_f5.5_a0.3.png" alt="Apecture = 0.3" class="img-responsive">
+        </div>
+    </div>
+    <br>
+
+    <p>
+        Below, we see how the radial and tangential distortion affect the scene. Note that the left top shows barrel distortion, right
+        top shows pincusion distortion, middle shows the barrel/tangential distortion with all 3 coefficients, left bottom shows
+        vertical direction tangential distortion, right bottom shows horizontal direction tangential distortion.
+    </p>
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_0_p0_0.png" alt="No distortion" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k1.0_0_0.png" alt="k1 = 1.0, k2=k3=0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_5.0_0.png" alt="k2 = 5.0, k1=k3=0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_100.png" alt="k3 = 100.0, k1=k2=0" class="img-responsive">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_0_p0_0.png" alt="No distortion" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k-1.0_0_0.png" alt="k1 = -1.0, k2=k3=0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_-5.0_0.png" alt="k2 = -5.0, k1=k3=0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_-100.png" alt="k3 = -100.0, k1=k2=0" class="img-responsive">
+        </div>
+    </div>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/advcam/nori_distortion_k1.0_2.0_0.04.png" alt="k1= 1.0, k2= 0.2, k3= 0.04" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_distortion_k-1.0_-2.0_-0.04.png" alt="k1= -1.0, k2= -0.2, k3= -0.04" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_0_p0_0.png" alt="No distortion" class="img-responsive">
+    </div>
+
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_p0.25_0.0.png" alt="p1= 0.25, p2=0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_p-0.25_0.0.png" alt="p1= -0.25, p2=0" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_0_p0_0.png" alt="No distortion" class="img-responsive">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_p0.0_0.25.png" alt="p1=0.0, p2= 0.25" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_p0.0_-0.25.png" alt="p1=0.0, p2= -0.25" class="img-responsive">
+            <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_0_p0_0.png" alt="No distortion" class="img-responsive">
+        </div>
+    </div>
+    <br>
+
+    <p>
+        Below, we see the effect of chromatic aberration. Note that we still have colored noise for \(bias=0.0\) case, since it still
+        has color channel sampling unless the chromatic aberration is disabled.
+    </p>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/advcam/nori_distortion_k0_0_0_p0_0.png" alt="Disabled" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_chromatic_abberation_c0.0.png" alt="bias= 0.0" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_chromatic_abberation_c0.25.png" alt="bias= 0.25" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_chromatic_abberation_c0.5.png" alt="bias= 0.5" class="img-responsive">
+    </div>
+    <br>
+
+    <p>
+        Below, we can see the scene with all these features applied. For thinlens camera, focal length=8, aperture size=0.3,
+        chromatic aberration bias=0.5, k1=1.0, k2=0.2, k3=0.04 were applied.
+    </p>
+
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/advcam/nori_perspective_twosphere.png" alt="Perspective" class="img-responsive">
+        <img src="validation_images_shinjeong/advcam/nori_adv_camera_altogether.png" alt="Thinlens" class="img-responsive">
+    </div>
+
+    <h3>Disney BSDF</h3>
+    <p>
+        <b>Main Modified Files:</b>
+        <li><code>diensy.cpp</code></li> <!-- Wave feature support -->
+        <li><code>warp.h</code> - Square to anisotropic GTR2 declaration</li> <!-- Wave in the BSDF Query, spdf, getSpectrum for BSDF-->
+        <li><code>warp.cpp</code> - Square to anisotropic GTR2 definition</li> <!-- Wave in the Emitter Query, spdf, getSpectrum for Emitter-->
+        <li><code>warptest.cpp</code> - Test for anisotropic GTR2 and Disney BRDF</li> <!-- Wave support Li function -->
+        
+        Our implementation of Disney BRDF mainly follwed <a href="https://github.com/wdas/brdf/blob/main/src/brdfs/disney.brdf">Disney
+        BRDF Explorer</a> and the <a href="https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf">
+        official note</a>. Since it lacks of explanation on how to implement pdf function, I also referred to the
+        <a href="https://schuttejoe.github.io/post/disneybsdf/">Joe Schutte's blog</a>, and the <a href="https://cseweb.ucsd.edu/~tzli/cse272/homework1.pdf">
+        UCSD homework</a>. <br> <br>
+
+        Our implementation contains 5 parameters: <b>subsurface, metallic, specular, roughness, anisotropic</b>. Mathmatical formulation
+        of our implementation will be introduced below. Our structure of explanation follows the similar way to <a href="http://simon-kallweit.me/rendercompo2015/report/">a previous
+        report</a>
+    </p>
+
+    <h4>Mathmatical Formulation</h4>
+    <p>
+        First, we will start by defining some variables and functions that will be repetitively used.
+    </p>
+    <center>
+    \(\begin{eqnarray} 
+        &w_i&:\ \text{unit vector toward incoming ray}\\
+        &w_o&:\ \text{unit vector toward outgoing ray}\\
+        &w_h&:\ \text{halfway vector}\\
+        &w_{x}&:\ x\text{ component of the vector }w\\
+        &w_{y}&:\ y\text{ component of the vector }w\\
+        &\theta_i&:\ \text{degree between normal vector and incoming ray}\\
+        &\theta_o&:\ \text{degree between normal vector and outgoing ray}\\
+        &\theta_h&:\ \text{degree between normal vector and halfway vector}\\
+        mix(x, y, a)=&\ (1-a)x + ay &:\ \text{linear interpolation function}\\
+        F(\theta)=&\ (1-\cos\theta)^5 &:\ \text{modified Schlick's fresnel approximation}\\
+        &b&:\ \text{base color}\\
+        &ss&:\ \text{subsurface}\\
+        &m&:\ \text{metallic}\\
+        &s&:\ \text{specular}\\
+        &r&:\ \text{roughness}\\
+        &a&:\ \text{anisotropic}
+    \end{eqnarray}\)</center>
+
+    <p>
+        Then, diffuse term is defined as
+    </p>
+    <center>\(\begin{eqnarray} 
+        f_d(\theta_i, \theta_o) =& \frac{b}{\pi}mix(1, F_{D90}, \cos\theta_i)mix(1, F_{D90}, \cos\theta_o)\\
+        \text{where}\ F_{D90} =& \frac{1}{2} + 2r\cos^2\theta_h
+    \end{eqnarray}\)</center>
+
+    <p>
+        And the subsurface term is defined as
+    </p>
+    <center>\(\begin{eqnarray} 
+        f_{ss}(\theta_i, \theta_o) =& \frac{5b}{4\pi}\left(mix(1, F_{SS90}, F(\theta_i))mix(1, F_{SS90}, F(\theta_o))\left(\frac{1}{\cos\theta_i + \cos\theta_o}-\frac{1}{2}\right)+\frac{1}{2}\right)\\
+        \text{where}\ F_{SS90} =& r\cos^2\theta_h
+    \end{eqnarray}\)</center>
+
+    <p>
+        The Metallic term is defined as
+    </p>
+    <center>\(\begin{eqnarray} 
+        f_m(\theta_i, \theta_o) =& F_{m}D_{m}G_{m}\\
+        \text{where}\ F_{m} =& mix(C_0, 1, F(\theta_h))\\
+        \text{, }\ D_m =& \frac{1}{\pi\alpha_x\alpha_y\left( \frac{w_{h, x}^2}{\alpha_x^2} + \frac{w_{h, y}^2}{\alpha_y^2} + \cos^2\theta_h \right)^2}\\
+        \text{, }\ G_m =& G(w_i)G(w_o)\\
+        \text{, }\ C_0 =& mix(0.08s, b, m)\\
+        \text{and, }\ G(w) =& \frac{1}{\cos\theta+\sqrt{w_{x}^2\alpha_x^2 + w_{y}^2\alpha_y^2+\cos^2\theta}}
+    \end{eqnarray}\)</center>
+
+    <p>
+        where the \(\alpha_x\) and \(\alpha_y\) models how specular the surface is in each direction.
+    </p>
+    <center>\(\begin{eqnarray} 
+        \alpha_x =& \max\left(0.0001, \frac{r^2}{\sqrt{1-0.9a}}\right)\\
+        \alpha_y =& \max\left(0.0001, r^2\sqrt{1-0.9a}\right)
+    \end{eqnarray}\)</center>
+
+    <p>
+        Altogether, our Disney BRDF is,
+    </p>
+    <center>\(\begin{eqnarray} 
+        f(\theta_i, \theta_o) = (1-m)mix(f_d(\theta_i, \theta_o), f_{ss}(\theta_i, \theta_o), ss) + f_m(\theta_i, \theta_o)
+    \end{eqnarray}\)</center>
+
+    <p>
+        For the sample and pdf function, we use \(k=\frac{1-m}{2}\) as the amount of diffuse reflection. Thus, we do the similar way to
+        the microfacet BRDF with the newly defined \(k\) and GTR distribution (<a href="https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf">Official note</a>'s Appendix B.2.).
+    </p>
+
+    <h4>Validation</h4>
+    <p>
+        First we provide a table for all parameters we implemented. The parameters are in \([0, 1]\) range with \(0.1\) space. The
+        default values are \((ss,m,s,r,a) = (0, 0, 0.5, 0.5, 0)\) except that \(m=1.0\) is default setting for the anisotropic row,
+        to see the effect of anisotropic parameter.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/parameters.png" alt="" class="img-responsive">
+    </div>
+
+    <p>
+        Now, we provide comparison for each of the parameter. Below shows how the subsurface scattering works with varying \(ss\) parameter.
+        Note that, as the subsurface parameter increases, the farther part from where the light directly enters gets brighter, while
+        the part the light directly enters get darker, which is the effect due to the subsurface scattering. However, note that this
+        is only a naive approximation of subsurface scattering, thus this effect may not be very similar to real subsurface scattering.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_s.0.png" alt="ss = 0" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_s.5.png" alt="ss = 0.5" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_s1.0.png" alt="ss = 1.0" class="img-responsive">
+    </div>
+
+    <p>
+        Next, below shows the comparison between ours Disney BRDF and mitsuba's Principled BRDF with respect to the various metallic parameter.
+        Note that ours gets darker at near-boundary of the object as the metallic term increases, and we believe this is the same reason with 
+        what <a href="http://simon-kallweit.me/rendercompo2015/report/">previous student</a> mentioned (in the Specular/Clearcoat Model
+        section), that is, "Disney uses some strange tweaks to the shadowing term, which is motivated from artists that complained about
+        specular being too hot at grazing angles".
+    </p>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.0-sp0.5-r0.5-a0.0.png" alt="ours (m=0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.0-s0.5-r0.5-a0.0.png" alt="mitsuba (m=0)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.4-sp0.5-r0.5-a0.0.png" alt="ours (m=0.4)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.4-s0.5-r0.5-a0.0.png" alt="mitsuba (m=0.4)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.8-sp0.5-r0.5-a0.0.png" alt="ours (m=0.8)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.8-s0.5-r0.5-a0.0.png" alt="mitsuba (m=0.8)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m1.0-sp0.5-r0.5-a0.0.png" alt="ours (m=1.0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m1.0-s0.5-r0.5-a0.0.png" alt="mitsuba (m=1.0)" class="img-responsive">
+    </div></div>
+
+    <p>
+        Below shows the comparison between our disney BRDF and diffuse BRDF, where only roughness varies and all the other parameters are
+        set to \((ss, m, s, a) = (0, 0, 0, 0)\). Note that, as the roughness increases, the boundary of the object gets brighter, which is
+        reasonable since the increased roughness results in more scattered distribution of the GTR2.
+    </p>
+    <div class="row">
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_diffuse.png" alt="Diffuse" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_all0_r.0.png" alt="Disney r=0" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_diffuse.png" alt="Diffuse" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_all0_r.5.png" alt="Disney r=0.5" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_diffuse.png" alt="Diffuse" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_all0_r1.0.png" alt="Disney r=1.0" class="img-responsive">
+    </div></div></div>
+
+    <p>
+        Below shows the comparison among our disney BRDF with various specular parameter, where all other parameters are set to \((ss, m, r, a) = (0, 0.5, 0.5, 0)\).
+        Note that we did not this specular parameter is not easy to be compared with the mitsuba, since it uses real fresnel
+        function for its specular term calculated with eta derived from specular parameter. This makes the specular part of disney bsdf's
+        specular effect very different from the principled bsdf's. Also note that the affect of specular parameter solely is not
+        very significant, because of the 0.08 multiplied inside the \(C_0\) term.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_m0.5_r0.5_sp0.0.png" alt="Disney s=0.0" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_m0.5_r0.5_sp0.5.png" alt="Disney s=0.5" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/disney_lowgain_m0.5_r0.5_sp1.0.png" alt="Disney s=1.0" class="img-responsive">
+    </div>
+
+
+    <!-- <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.0-sp0.0-r0.5-a0.0.png" alt="ours (s=0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.0-s0.0-r0.5-a0.0.png" alt="mitsuba (s=0)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.0-sp0.5-r0.5-a0.0.png" alt="ours (s=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.0-s0.5-r0.5-a0.0.png" alt="mitsuba (s=0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.0-sp1.0-r0.5-a0.0.png" alt="ours (s=1.0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.0-s1.0-r0.5-a0.0.png" alt="mitsuba (s=1.0)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.0-sp0.5-r0.5-a0.0.png" alt="mitsuba (s=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.0-sp1.0-r0.5-a0.0.png" alt="mitsuba (s=1.0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.0-sp0.0-r0.5-a0.0.png" alt="ours (s=0.0)" class="img-responsive">
+    </div></div> -->
+
+    <!-- <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.5-sp0.0-r0.5-a0.0.png" alt="ours (s=0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.5-s0.0-r0.5-a0.0.png" alt="mitsuba (s=0)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.5-sp0.5-r0.5-a0.0.png" alt="ours (s=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.5-s0.5-r0.5-a0.0.png" alt="mitsuba (s=0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.5-sp1.0-r0.5-a0.0.png" alt="ours (s=1.0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m0.5-s1.0-r0.5-a0.0.png" alt="mitsuba (s=1.0)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.5-sp0.5-r0.5-a0.0.png" alt="mitsuba (s=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.5-sp1.0-r0.5-a0.0.png" alt="mitsuba (s=1.0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m0.5-sp0.0-r0.5-a0.0.png" alt="ours (s=0.0)" class="img-responsive">
+    </div></div> -->
+
+    <p>
+        To make the anisotropic parameter work correctly, we had to modify the setHitInformation function of both sphere.cpp and mesh.cpp
+        so that the shading frame they generate continuously changes as the intersection point changes.
+        Below shows the comparison between our disney BRDF and the mitsuba Principled BRDF, where only anisotropic parameter varies and
+        all other parameters are set to \((ss, m, s, r) = (0, 1.0, 0.5, 0.5)\). Note that they are almost identical for analytic sphere.
+    </p>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_sphere_analytic-m1.0-sp0.5-r0.5-a0.0.png" alt="ours (a=0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/analyticsphere-m1.0-s0.5-r0.5-a0.0.png" alt="mitsuba (a=0)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_sphere_analytic-m1.0-sp0.5-r0.5-a0.5.png" alt="ours (a=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/analyticsphere-m1.0-s0.5-r0.5-a0.5.png" alt="mitsuba (a=0.5)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/disney/cbox_disney_sphere_analytic-m1.0-sp0.5-r0.5-a1.0.png" alt="ours (a=1.0)" class="img-responsive">
+            <img src="validation_images_shinjeong/disney/mitsuba/analyticsphere-m1.0-s0.5-r0.5-a1.0.png" alt="mitsuba (a=1.0)" class="img-responsive">
+        </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_sphere_analytic-m1.0-sp0.5-r0.5-a0.5.png" alt="ours (a=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_sphere_analytic-m1.0-sp0.5-r0.5-a1.0.png" alt="ours (a=1.0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_sphere_analytic-m1.0-sp0.5-r0.5-a0.0.png" alt="ours (a=0.0)" class="img-responsive">
+    </div></div>
+    </div>
+
+    <p>
+        Note that, for general mesh, there is only a difference in the direction of the anisotropic effect. This is possibily
+        because of our ways of forming and handling the shading frame is different from that of mitsuba.
+    </p>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m1.0-sp0.5-r0.5-a0.0.png" alt="ours (a=0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m1.0-s0.5-r0.5-a0.0.png" alt="mitsuba (a=0)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m1.0-sp0.5-r0.5-a0.5.png" alt="ours (a=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m1.0-s0.5-r0.5-a0.5.png" alt="mitsuba (a=0.5)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-6">
+        <div class="twentytwenty-container">
+            <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m1.0-sp0.5-r0.5-a1.0.png" alt="ours (a=1.0)" class="img-responsive">
+            <img src="validation_images_shinjeong/disney/mitsuba/disney-spp128-m1.0-s0.5-r0.5-a1.0.png" alt="mitsuba (a=1.0)" class="img-responsive">
+        </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m1.0-sp0.5-r0.5-a0.5.png" alt="ours (a=0.5)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m1.0-sp0.5-r0.5-a1.0.png" alt="ours (a=1.0)" class="img-responsive">
+        <img src="validation_images_shinjeong/disney/cbox_disney_mitsubasphere-m1.0-sp0.5-r0.5-a0.0.png" alt="ours (a=0.0)" class="img-responsive">
+    </div></div>
+    </div>
+
+    <p>
+        We ran warp tests for Anisotropic GTR2 distribution with various \(a, r\) parameters. Note that \(\alpha_x, \alpha_y\)
+        were calculated according to the above mentioned equation.
+    </p>
+    <div class="row">
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.0r0.5.png" alt="(a, r) = (0, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.5r0.5.png" alt="(a, r) = (0.5, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a1.0r0.5.png" alt="(a, r) = (1.0, 0.5)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.0r0.5run.png" alt="(a, r) = (0, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.5r0.5run.png" alt="(a, r) = (0.5, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a1.0r0.5run.png" alt="(a, r) = (1.0, 0.5)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.5r0.2.png" alt="(a, r) = (0.5, 0.2)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.5r0.8.png" alt="(a, r) = (0.5, 0.8)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.5r0.2run.png" alt="(a, r) = (0.5, 0.2)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/warptests/a0.5r0.8run.png" alt="(a, r) = (0.5, 0.8)" class="img-responsive">
+    </div></div>
+    </div>
+
+    <p>
+        We also ran warp tests for Disney BRDF with various \(a, r\) parameters where the others are fixed as \((ss, m, s) = (0, 0.5, 0.5)\).
+        Note that \(\alpha_x, \alpha_y\) were calculated according to the above mentioned equation.
+    </p>
+    <div class="row">
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.1r0.5.png" alt="(a, r) = (0.1, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.5r0.5.png" alt="(a, r) = (0.5, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.9r0.5.png" alt="(a, r) = (0.9, 0.5)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.1r0.5run.png" alt="(a, r) = (0.1, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.5r0.5run.png" alt="(a, r) = (0.5, 0.5)" class="img-responsive">
+    </div></div>
+    <div class="col-md-4">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.9r0.5run.png" alt="(a, r) = (0.9, 0.5)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.5r0.2.png" alt="(a, r) = (0.5, 0.2)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.5r0.8.png" alt="(a, r) = (0.5, 0.8)" class="img-responsive">
+    </div></div>
+    </div>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.5r0.2run.png" alt="(a, r) = (0.5, 0.2)" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/disney/disneytests/a0.5r0.8run.png" alt="(a, r) = (0.5, 0.8)" class="img-responsive">
+    </div></div>
+    </div>
+
+    <h3>Spectral Rendering</h3>
+    <p>
+        <b>Main Modified Files:</b>
+        <li><code>spectralnori/color.h</code> - Wave (with hero and two other wavelengthes in nanometer) struct support</li> <!-- Wave feature support -->
+        <li><code>spectralnori/bsdf.h</code> - Wave struct member in the BSDF query, spectral pdf function for BSDFs</li> <!-- Wave in the BSDF Query, spdf, getSpectrum for BSDF-->
+        <li><code>spectralnori/emitter.h</code> - Wave struct member in the Emitter query, spectral pdf function for Emitters</li> <!-- Wave in the Emitter Query, spdf, getSpectrum for Emitter-->
+        <li><code>spectralnori/integrator.h</code> - Wave struct as an additional parameter of Li function</li> <!-- Wave support Li function -->
+        <li><code>spectralnori/spectral_path_mis.cpp</code> - Color space transformation, path pdf tracking and amplification for wavelength-dependent discrete bsdf</li> <!-- Wave feature support -->
+        <li><code>spectralnori/perspective.cpp</code> - Initialize ray spectrum with reciprocal of the probability of the given wavelength being selected</li> <!-- Validation -->
+        <li><code>spectralnori/render.cpp</code> - Sample a wavelength and call the rendering functions with it</li> <!-- Wavelength sampling support -->
+        <li><code>spectralnori/arealight.cpp</code> - Black body emitter implemented for validation</li> <!-- Validation -->
+        <li><code>spectralnori/diffuse.cpp</code> - Spectral Diffuse emitter implemented for validation</li> <!-- Validation -->
+        <li><code>spectralnori/mirror.cpp</code> - Mirror BSDF implemented for validation</li> <!-- Validation -->
+        <li><code>spectralnori/dielectric.cpp</code> - Dielectric BSDF implemented for validation</li> <!-- Validation -->
+        <br>
+        
+        Our implementation follows <a href="https://cgg.mff.cuni.cz/~wilkie/Website/EGSR_14_files/WNDWH14HWSS.pdf">Hero Wavelength Spectral Sampling</a>
+        paper. I mainly refered to the <a href="https://github.com/64/iris">Iris</a> ray tracer and <a href="https://github.com/mmp/pbrt-v4">PBRT</a>
+        implementation. However, none of these can be directly compared to mine since our spectral BSDFs and Emitters are implemented 
+        without consideration of some details which will not harm the correctness (e.g. non-realistic refractive index of dielectric
+        bsdf, different function for spectral diffuse bsdf, no normalization for black body emitter, etc.). This is because the BSDFs
+        and Emitters are not in our feature lists, and thus implemented for only validatation purposes.<br> <br>
+        
+        Note that the main idea of the above-mentioned paper is reusing the same path of a ray with hero wavelength for other wavelengths.
+        That is, each wavelength in the ray keeps track of its own probability of following that path (path pdf), and for the wavelength-dependent
+        bsdfs, a proper MIS should be done based on the path pdf. When each path trace halts, contribution of each wavelength to the image is
+        accumulated to the image in a form of RGB (this need a conversion from spectrum to XYZ and then RGB). Since this method can
+        track not only one wavelength (hero wavelength) for each ray but also other wavelengths, this method should have faster
+        convergence. Implementing this method, we chose to track three wavelengthes simultaneously, since this enables us to keep
+        using <code>Color3f</code> array inside BSDFs, Emitters and Integrators.<br> <br>
+
+        Our implementation of the spectral integrator is based on the mis integrator, thus the below-mentioned "usual renderer"s are
+        path mist renderers. <br> <br>
+
+        <b>Note for TAs:</b> Our spectral features are not used in our final image, and thus implemented on a separate nori. You can find
+        our implementation for this part in <code>spectralnori</code> directory of our submission.
+    </p>
+
+    <h4>Validation</h4>
+    <h5>Convergence Speed</h5>
+    <p>
+        Since our implementation does not contain single-wavelength version, we could not compare the convergence speed of ours to the
+        single-wavelength version. However, as our chromatic aberration of advanced camera feature has channel separation functionality,
+        we can compare those two. Note that, below comparison shows quite comparable convergence speed thanks to the hero wavelength sampling,
+        while single-wavelength version of spectral rendering is supposed to have slower convergence rate than usual renderer with channel
+        separation, since spectral renderer even samples some wavelengths that does not contribute much to RGB channels while each channel
+        of ray of usual renderer always directly contribute to RGB channel.
+    </p>
+
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_spp4.png" alt="Spectral Renderer spp=4" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_usual_4spp.png" alt="Usual Renderer (channel separation) spp=4" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_spp16.png" alt="Spectral Renderer spp=16" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_usual_16spp.png" alt="Usual Renderer (channel separation) spp=16" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_spp64.png" alt="Spectral Renderer spp=64" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_usual_64spp.png" alt="Usual Renderer (channel separation) spp=64" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_spp256.png" alt="Spectral Renderer spp=256" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_usual_256spp.png" alt="Usual Renderer (channel separation) spp=256" class="img-responsive">
+    </div></div>
+    <br>
+
+    <h5>Black Body Emitter</h5>
+    <p>
+        Our black body emitter follows <a href="https://en.wikipedia.org/wiki/Planck%27s_law">Planck's Law</a>. Note that the intensity
+        of this emitter is very sensitive to the temperature because of the Planck's Law. Thus, we had to rescale the intensity properly
+        whenever the temperature is changed. This change is done manually; that is, we did not normalized the value of the Planck's Law 
+        and empirically found the proper scalar.
+    </p>
+
+    <h5>Diffuse BRDF</h5>
+    <p>
+        Our spectral diffuse BRDF was motivated from <a href="https://www.unm.edu/~toolson/human_cone_response.htm">human cone response</a>.
+        Similar to <a href="https://ceciliavision.github.io/graphics/a6/">this implementation</a>, we defined and used below function
+        for our spectral albedo.
+        <center>
+        \(
+            albedo_{\lambda}=\frac{1}{3}\left(\frac{albedo_{red}}{\sqrt{1+(\lambda-630)^2}} + \frac{albedo_{green}}{\sqrt{1+(\lambda-532)^2}} + \frac{albedo_{blue}}{\sqrt{1+(\lambda-465)^2}}\right)
+        \)</center>
+    </p>
+
+    <h5>Mirror BRDF</h5>
+    <p>
+        Our spectral mirror BRDF just follows the implementation of that of usual renderer, as the reflection does not depend on wavelength.
+    </p>
+
+    <h5>Dielectric BSDF</h5>
+    <p>
+        Our spectral dielectric BSDF behaves the same with usual dielectric BSDF if the ray is reflected. However, when the ray is refracted,
+        the bsdf for hero wavelength only survives and the other terms becomes zero since the direction of refraction depends on the wavelength
+        and the direction of refraction is computed with respect to the hero wavelength. (Thus the other wavelength's bsdf is zero at that direction
+        considering that dielectric bsdf is delta function) Note that refracted ray thus has roughly \(1/3\) throughput than before, since other terms
+        than hero wavelength became zero. This is handled by the integrator by utilizing the path pdf (rescale the return value of emitter by
+        dividing it by hero path pdf over sum of all three paths' pdfs, which is hero path's probability of being selected among the three paths).<br> <br>
+
+        Note that our function for wavelength-dependent index of refraction is designed to be unrealistically large, to observe the dispersion
+        easily. Below function is the functional index of refraction, which is an implementation of the <a href="https://en.wikipedia.org/wiki/Sellmeier_equation">
+        Sellmeier equation</a>.
+
+        <center>
+        \(
+            n=\sqrt{1 + \frac{0.01}{1-\frac{250^2}{\lambda^2}} + \frac{3}{1-\frac{280^2}{\lambda^2}} + \frac{1.3}{1-\frac{1000^2}{\lambda^2}}}
+        \)</center>
+    </p>
+
+    <h5>Rendered Scenes</h5>
+    <p>
+        Below images show the comparison between spectral renderer with the lighting with various temperatures and the usual renderer.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/spectral/cbox_path_mis_scene2.png" alt="Usual Renderer" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_3000k.png" alt="Spectral w/ 3000K light" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_6000k.png" alt="Spectral w/ 6000K light" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene2_10000k.png" alt="Spectral w/ 10000K light" class="img-responsive">
+    </div>
+    <br>
+
+    <p>
+        Below, we see the dispersion effect (especially at the top and bottom of the sphere, and at the corners of walls in the sphere)
+        by the spectral dielectric bsdf and the spectral integrator.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/spectral/cbox_path_mis_scene1.png" alt="Usual Renderer" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene1_3000k.png" alt="Spectral w/ 3000K light" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene1_6000k.png" alt="Spectral w/ 6000K light" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene1_10000k.png" alt="Spectral w/ 10000K light" class="img-responsive">
+    </div>
+    <br>
+
+    <p>
+        We also rendered the same cbox scene we rendered during our assignment to see the complex interactions between mirror and dielectric objects.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/spectral/cbox_path_mis_scene3.png" alt="Usual Renderer" class="img-responsive">
+        <img src="validation_images_shinjeong/spectral/cbox_spectral_path_mis_scene3.png" alt="Spectral Renderer" class="img-responsive">
+    </div>
+    <br>
+
+    
+    <h3>Textured Area Emitter</h3>
+    <p>
+        <b>Main Modified Files:</b>
+        <li><code>texturearea.cpp</code></li> <!-- Wave feature support -->
+        <li><code>emitter.h</code> - New component, uv, for the emitter query record</li> <!-- Wave feature support -->
+        <li><code>shape.h</code> - New component, uv, for the shape query record</li> <!-- Wave feature support -->
+        <li><code>path_mis.cpp</code> - Put uv into each emitter query record</li> <!-- Wave feature support -->
+        <li><code>volpathmis.cpp</code> - Put uv into each emitter query record</li> <!-- Wave feature support -->
+        <li><code>sphere.cpp</code> - Calculate uv value in sampleSurface function</li> <!-- Wave feature support -->
+        <li><code>mesh.cpp</code> - Calculate uv value in sampleSurface function</li> <!-- Wave feature support -->
+        <br>
+
+        For this implementation, area emitter should be able to find uv coordinate of where it samples. This functionality involves
+        addition of uv components for emitter query and shape query. Thus, whenever the sampleSurface function is called, the uv 
+        coordinate of the sampled point should also be saved in the shape query record and passed to the textured area emitter, so that
+        the emitter can return the radiance according to the uv. Note that, to get the correct radiance from now on, emitter queries
+        used for evaluation of emitter should have proper uv coordinates, which should be done in integrators.
+
+        With all these functionality, Texture Area Emitter is simple to implement by just replacing constant radiance value with 
+        texture. (We also multiplied the radiance with a scalar parameter which has default value of 1, to enable stronger radiance
+        than 1)
+    </p>
+
+    <h4>Validation</h4>
+    <p>
+        Below, we see the analytic sphere textured area emitter, compared with mitsuba. They are almost identical.
+    </p>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/texturedemit/sphere-light-checkertexture.png" alt="Ours" class="img-responsive">
+        <img src="validation_images_shinjeong/texturedemit/checkertexture-mitsuba.png" alt="Mitsuba" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/texturedemit/sphere-light-texture.png" alt="Ours" class="img-responsive">
+        <img src="validation_images_shinjeong/texturedemit/imagetexture-mitsuba.png" alt="Mitsuba" class="img-responsive">
+    </div></div>
+    </div>
+    <br>
+    <p>
+        Below, we see the mesh textured area emitter, compared with mitsuba. (The ball on the plane is mirror.) They are almost identical.
+        Note that this textured area emitter for general meshes (non-analytical shapes) is possible only for the objects with uv mapping.
+    </p>
+    <div class="row">
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/texturedemit/plane-light-texture.png" alt="Ours" class="img-responsive">
+        <img src="validation_images_shinjeong/texturedemit/planetexture-mitsuba.png" alt="Mitsuba" class="img-responsive">
+    </div></div>
+    <div class="col-md-6">
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/texturedemit/cboxbunny-light-texture.png" alt="Ours" class="img-responsive">
+        <img src="validation_images_shinjeong/texturedemit/cboxbunnytexture-mitsuba.png" alt="Mitsuba" class="img-responsive">
+    </div></div>
+    </div>
+    <br>
+
+
+    <h3>Probabilistic Progressive Photon Mapping</h3>
+    <p>
+        <b>Main Modified Files:</b>
+        <li><code>ppmpa.cpp</code></li> <!-- Wave feature support -->
+        <li><code>integrator.h</code> - defined another virtual function later used to reinitialize photon map (betweeniter())</li> <!-- Wave feature support -->
+        <li><code>render.cpp</code> - call the function newly defined in integrator.h</li> <!-- Wave feature support -->
+        <br>
+
+        For each sample, photon map is rebuilt with <code>betweeniter()</code> function defined in the <code>integrator.h</code>.
+        This function also updates the radius of photon map query, according to the rule given in <a href="https://www.cs.umd.edu/~zwicker/publications/PPMProbabilistic-TOG11.pdf">
+        the paper</a>. For this, <code>betweeniter()</code> function of the integrator is called for each iteration over samples.
+        The running average is automatically calculated by the renderer. (By the block structure, to be specific)
+    </p>
+
+    <h4>Validation</h4>
+    <p>
+        Table scene of the previous assignment was used for this validation. We collected 100000 photons (2% of original) per each
+        iteration, and ran up to 10000 iteration. The below resulting image of probabilistic progressive photon mapping (ppmpa)
+        after 10000 iteration is comparable to that of path mis and better than usual photon mapping.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/ppmpa/table_path_mis.png" alt="path mis" class="img-responsive">
+        <img src="validation_images_shinjeong/ppmpa/table_pmap.png" alt="photon mapping" class="img-responsive">
+        <img src="validation_images_shinjeong/ppmpa/table_ppmpa_spp10000.png" alt="ppmpa spp=10000" class="img-responsive">
+    </div>
+    <br>
+
+    <p>
+       With the below images showing running averages, we see that the probabilistic progressive photon mapping improves as the
+       iteration continues.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/ppmpa/table_ppmpa_spp1.png" alt="spp=1" class="img-responsive">
+        <img src="validation_images_shinjeong/ppmpa/table_ppmpa_spp10.png" alt="spp=10" class="img-responsive">
+        <img src="validation_images_shinjeong/ppmpa/table_ppmpa_spp100.png" alt="spp=100" class="img-responsive">
+        <img src="validation_images_shinjeong/ppmpa/table_ppmpa_spp1000.png" alt="spp=1000" class="img-responsive">
+    </div>
+    <br>
+
+
+    <h3>Final Gathering for Photon Mapping</h3>
+    <p>
+        <b>Main Modified Files:</b>
+        <li><code>pmfg.cpp</code></li> <!-- Wave feature support -->
+        <br>
+
+        Different from usual photon mapper implementation of which photon map already contains direct illumination, integrator doing
+        final gather for photon map should be implemented based on the path mis integrator, as we lose the direct illumination by
+        pushing the querying to photon map one step further. That is, the photon map with final gather can only contributes to the
+        indirect illumination.<br> <br>
+
+        Thus, the path mis code was combined with photon map building and final gathering part was implemented on top of the combined
+        code. The final gathering is done only when the diffuse surface is encountered, and the querying to the photon map is possible
+        only when the gathering rays hits the diffuse surface. Thus, the gathering rays proceeds until a diffuse surface is found; however,
+        proceeding the gathering rays forever is not a desirous behavior, thus the maximum number of proceed is limited to 5.<br> <br>
+
+        Since the final gathering ray tracer (pmfg) halts when it encounters diffuse surface, the only way of getting caustics is photon map.
+        However, the global photon map we currently have does not contributes caustics since the caustics in the global photon map is
+        also pushed one step back and is not caustics anymore. Thus, our final gathering ray tracer does not have any caustics.
+    </p>
+
+    <h4>Validation</h4>
+    <p>
+        We utilized cbox from the previous assignment for validation. Note that it is logical to compare the pmfg with both path
+        mis and photon mapper since the pmfg is based on path mis and it still utilizes photon map. Below, we can see the pmfg is
+        less blotchy than photon mapper and less noisy than path mis thanks to the final gather. However, it does not have any
+        caustics as mentioned above.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/pmfg/cbox_path_mis.png" alt="path mis" class="img-responsive">
+        <img src="validation_images_shinjeong/pmfg/cbox_pmap.png" alt="photon mapper" class="img-responsive">
+        <img src="validation_images_shinjeong/pmfg/cbox_pmfg_gc5.png" alt="final gather photon mapper" class="img-responsive">
+    </div>
+    <br>
+
+    <p>
+        Note that the number of gathering rays can be set arbitrary. We accept it as a parameter with default value of 5. We can
+        easily expect that as more rays we gather, less noisy image we will get. Below images proves this expectation to be correct.
+        To see the difference, it is better to focus on the ceiling as that part is usually the most noisy.
+    </p>
+    <div class="twentytwenty-container">
+        <img src="validation_images_shinjeong/pmfg/cbox_pmfg_gc3.png" alt="3 gathering rays" class="img-responsive">
+        <img src="validation_images_shinjeong/pmfg/cbox_pmfg_gc5.png" alt="5 gathering rays" class="img-responsive">
+        <img src="validation_images_shinjeong/pmfg/cbox_pmfg_gc7.png" alt="7 gathering rays" class="img-responsive">
+    </div>
+    <br>
+
+    <h2>4. Final Render</h2>
+
+    <p>
+        Taking inspiration from our proposed motivational image, we rendered the below scene, which puts together and 
+        showcases some of the various features we implemented. 
+        The image shown below is rendered at 1920x1080 resolution with 2048 samples per pixel.
+    </p>
+
+    <div class="twentytwenty-container">
+        <img src="images/LaputaScene_final_1920x1080_2048spp.png" alt="Final Laputa Scene Render" class="img-responsive">
+    </div> <br>
+</div>
+</div>
+
+
+<!-- Bootstrap core JavaScript -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="resources/bootstrap.min.js"></script>
+<script src="resources/jquery.event.move.js"></script>
+<script src="resources/jquery.twentytwenty.js"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<script>
+$(window).load(function(){$(".twentytwenty-container").twentytwenty({default_offset_pct: 0.5});});
+</script>
+
+</body>
+</html>
